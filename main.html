@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Click and Drag</title>
+  <meta charset="UTF-8" />
+  <title>Click and Drag Cubes</title>
 </head>
-<body>
-  <div class="items">
+<div class="items">
     <div class="item item1" style="top:20px; left:20px;">01</div>
     <div class="item item2" style="top:20px; left:100px;">02</div>
     <div class="item item3" style="top:20px; left:180px;">03</div>
@@ -19,41 +18,63 @@
     <!-- (You can keep adding others similarly) -->
   </div>
 
-<script>
-  const container = document.querySelector('.items');
-  let selected = null;
-  let offsetX = 0, offsetY = 0;
+  <script>
+    const container = document.getElementById('container');
+    const cubes = document.querySelectorAll('.cube');
+    let selectedCube = null;
+    let offsetX = 0;
+    let offsetY = 0;
 
-  document.querySelectorAll('.item').forEach(item => {
-    item.addEventListener('mousedown', (e) => {
-      selected = item;
-      offsetX = e.clientX - item.offsetLeft;
-      offsetY = e.clientY - item.offsetTop;
-      selected.style.zIndex = 1000; // bring on top
+    cubes.forEach(cube => {
+      cube.addEventListener('mousedown', (e) => {
+        selectedCube = cube;
+
+        // Get bounding boxes
+        const rect = cube.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Calculate offset between cursor and cube top-left corner
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        // Convert cube to absolute position (so it can move freely)
+        cube.classList.add('dragging');
+        cube.style.width = rect.width + 'px';
+        cube.style.height = rect.height + 'px';
+        cube.style.left = rect.left - containerRect.left + 'px';
+        cube.style.top = rect.top - containerRect.top + 'px';
+      });
     });
-  });
 
-  document.addEventListener('mousemove', (e) => {
-    if (selected) {
-      let x = e.clientX - offsetX;
-      let y = e.clientY - offsetY;
+    // Move the cube with the mouse
+    document.addEventListener('mousemove', (e) => {
+      if (selectedCube) {
+        const containerRect = container.getBoundingClientRect();
 
-      // Keep inside container
-      const maxX = container.clientWidth - selected.clientWidth;
-      const maxY = container.clientHeight - selected.clientHeight;
-      x = Math.max(0, Math.min(x, maxX));
-      y = Math.max(0, Math.min(y, maxY));
+        let x = e.clientX - containerRect.left - offsetX;
+        let y = e.clientY - containerRect.top - offsetY;
 
-      selected.style.left = `${x}px`;
-      selected.style.top = `${y}px`;
-    }
-  });
+        // Boundaries: keep cube inside container
+        const maxX = container.clientWidth - selectedCube.offsetWidth;
+        const maxY = container.clientHeight - selectedCube.offsetHeight;
 
-  document.addEventListener('mouseup', () => {
-    if (selected) selected.style.zIndex = 1;
-    selected = null;
-  });
-</script>
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x > maxX) x = maxX;
+        if (y > maxY) y = maxY;
 
+        selectedCube.style.left = `${x}px`;
+        selectedCube.style.top = `${y}px`;
+      }
+    });
+
+    // When mouse released
+    document.addEventListener('mouseup', () => {
+      if (selectedCube) {
+        selectedCube.classList.remove('dragging');
+        selectedCube = null;
+      }
+    });
+  </script>
 </body>
 </html>
